@@ -1,6 +1,6 @@
 # JSON Redaction Tool
-## Author: Dr. Robert Li
-### Version 2.0
+### Author: Dr. Robert Li
+#### Version 2.0
 
 A Python utility for redacting personally identifiable information (PII) from JSON files and exporting the data to CSV format.
 
