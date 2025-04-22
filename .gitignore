@@ -33,8 +33,9 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Input files
+# Input files and any folders
 *.json
+/*
 
 # Output files
 redacted_*.json
