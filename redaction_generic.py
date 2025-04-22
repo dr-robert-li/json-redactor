@@ -16,10 +16,10 @@ def redact_pii(obj):
         
         # Redact Salesforce links
         text = re.sub(r'https?://\w+\.lightning\.force\.com/\S+', '[REDACTED SALESFORCE LINK]', text)
-        text = re.sub(r'https?://wpengine\.my\.salesforce\.com/\S+', '[REDACTED SALESFORCE LINK]', text)
+        text = re.sub(r'https?://[^/]+\.my\.salesforce\.com/\S+', '[REDACTED SALESFORCE LINK]', text)
         
         # Redact Zendesk links
-        text = re.sub(r'https?://wpengine\.zendesk\.com/\S+', '[REDACTED ZENDESK LINK]', text)
+        text = re.sub(r'https?://[^/]+\.zendesk\.com/\S+', '[REDACTED ZENDESK LINK]', text)
         
         # Redact email addresses
         text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[REDACTED EMAIL]', text)
@@ -37,23 +37,23 @@ def redact_pii(obj):
         # Redact credit card numbers
         text = re.sub(r'\b(?:\d{4}[- ]?){3}\d{4}\b', '[REDACTED CREDIT CARD]', text)
 
-        # Redact WP Engine install URLs
-        text = re.sub(r'https?://my\.wpengine\.com/installs/[a-zA-Z0-9_-]+', '[REDACTED INSTALL URL]', text)
+        # Redact /installs/ URLs
+        text = re.sub(r'https?://my\.[^/]+\.com/installs/[a-zA-Z0-9_-]+', '[REDACTED INSTALL URL]', text)
 
-        # Common TLDs
-        text = re.sub(r'\b[a-zA-Z0-9][a-zA-Z0-9-]*\.(com|org|net|io|co|us|edu|gov|biz|info)\b', '[REDACTED WEBSITE]', text)
+        # Common TLDs        
+        # text = re.sub(r'\b[a-zA-Z0-9][a-zA-Z0-9-]*\.(com|org|net|io|co|us|edu|gov|biz|info)\b', '[REDACTED WEBSITE]', text)
 
         # Subdomains
-        text = re.sub(r'\b[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9][a-zA-Z0-9-]*\.(com|org|net|io|co|us|edu|gov|biz|info)\b', '[REDACTED WEBSITE]', text)
+        # text = re.sub(r'\b[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9][a-zA-Z0-9-]*\.(com|org|net|io|co|us|edu|gov|biz|info)\b', '[REDACTED WEBSITE]', text)
 
         # Domains with paths
-        text = re.sub(r'\b[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9-]+\.[a-z]{2,}(/[^\s]*)?', '[REDACTED WEBSITE]', text)
+        # text = re.sub(r'\b[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9-]+\.[a-z]{2,}(/[^\s]*)?', '[REDACTED WEBSITE]', text)
 
         # Redact specific name patterns
         # Common greetings with names
-        text = re.sub(r'\b(Hey|Hello|Hi)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', r'\1 [REDACTED NAME]', text)
-
-        # Names with single initial (e.g., "Erick M" or "Hector L.")
+        text = re.sub(r'\b(Hey|Hello|Hi|Dear|Good morning|Good afternoon|Good evening|Evening|Morning|Afternoon|Greetings|Hiya|Howdy)[,!.\s-]*\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', r'\1 [REDACTED NAME]', text)        
+        
+        # Names with single initial (e.g., "John M" or "Joe L.")
         text = re.sub(r'\b([A-Z][a-z]+)\s+([A-Z]\.?)\b', '[REDACTED NAME]', text)
         
         # Names with titles
@@ -66,42 +66,65 @@ def redact_pii(obj):
         text = re.sub(r'\bJohn Smith\b', '[REDACTED NAME]', text)
         
         # Names at the end of messages or signatures
-        text = re.sub(r'Thank you![\s\n]+([A-Z][a-z]+\s+[A-Z][a-z]+)', 'Thank you!\n[REDACTED NAME]', text)
-        
+        # Common salutations with names
+        salutations = (
+            r'Thank you!?|Thank you|Thanks|Cheers|Regards|Sincerely|'
+            r'Best regards|Kind regards|Best wishes|Warm regards|'
+            r'Best|Yours truly|Yours sincerely|Regards from|'
+            r'Warmly|Cordially|All the best|Take care|'
+            r'Many thanks|With appreciation|Respectfully|'
+            r'Looking forward|Best wishes from|Yours faithfully|'
+            r'With best regards|With kind regards|With thanks'
+        )
+    
+        # Match salutation followed by punctuation/whitespace and then name
+        text = re.sub(
+            fr'({salutations})[^\w\n]*[\s\n]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)',
+            r'\1\n[REDACTED NAME]',
+            text
+        )
+    
+        # Match salutation followed directly by name
+        text = re.sub(
+            fr'({salutations})[\s\n]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)',
+            r'\1\n[REDACTED NAME]',
+            text
+        )
+    
+        # Match name followed by signature title/role
+        text = re.sub(
+            fr'({salutations})[^\w\n]*[\s\n]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)[\s\n]+([A-Za-z\s\|]+)',
+            r'\1\n[REDACTED NAME]\n\3',
+            text
+        )
+
         # Full names with first and last name (more general pattern)
         text = re.sub(r'\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b', '[REDACTED NAME]', text)
         
-        # Redact addresses - more comprehensive patterns
+        # Redact addresses
         # Standard US address format
         text = re.sub(r'\b\d+\s+[A-Za-z\s]+,\s+[A-Za-z\s]+,\s+[A-Z]{2}\s+\d{5}\b', '[REDACTED ADDRESS]', text)
         
         # International address format
         text = re.sub(r'\b\d+[a-zA-Z]?,\s*L\d+\s+\d+\s+[A-Za-z\s]+\s+St\b', '[REDACTED ADDRESS]', text)
         
-        # Specific address pattern from example
+        # Specific address pattern - examples below
         text = re.sub(r'10b,\s*L10\s*333\s*Ann\s*St', '[REDACTED ADDRESS]', text)
+        text = re.sub(r'504\s*Lavaca\s*St,\s*Suite\s*1000', '[REDACTED ADDRESS]', text)
         
         # City, state/province, postal code, country format
         text = re.sub(r'[A-Za-z\s]+,\s*[A-Za-z]{2,4},\s*\d{4,5}(?:-\d{4})?\s*(?:[A-Za-z\s]+)?', '[REDACTED ADDRESS]', text)
         
-        # Specific location
+        # Specific location - examples below
         text = re.sub(r'Brisbane,\s*QLD,\s*4000', '[REDACTED ADDRESS]', text)
         text = re.sub(r'Austin,\s*TX,\s*78759', '[REDACTED ADDRESS]', text)
         
-        # Redact company names that might be confidential in the data - example below
+        # Redact company names that might be confidential in the data - examples below
         text = re.sub(r'ACME Corp.', '[REDACTED COMPANY]', text)
+        text = re.sub(r'WP Engine', '[REDACTED COMPANY]', text)
 
-        # Redact account names
-        text = re.sub(r'\bshadesofweb\b', '[REDACTED ACCOUNT]', text)
-        text = re.sub(r'\btksdesignteam\b', '[REDACTED ACCOUNT]', text)
-        text = re.sub(r'\bGunforhire\b', '[REDACTED ACCOUNT]', text)
-        
-        # Redact install names
-        text = re.sub(r'\bstclairtennis1\b', '[REDACTED INSTALL]', text)
-        text = re.sub(r'\bwewnational\b', '[REDACTED INSTALL]', text)
-        
-        # Redact file paths with install names
-        text = re.sub(r'/nas/content/(live|staging)/[a-zA-Z0-9_-]+', '/nas/content/\\1/[REDACTED INSTALL]', text)
+        # Redact file paths with application install names
+        text = re.sub(r'(/nas/content/(live|staging)|/var/www|/usr/share/nginx|/usr/share/apache2|/opt/bitnami|/home/\w+/public_html|/srv/www)/[a-zA-Z0-9_-]+', '\\1/[REDACTED INSTALL]', text)
         
         return text
     
@@ -128,7 +151,7 @@ def redact_pii(obj):
     else:
         # Return non-string, non-container objects unchanged
         return obj
-
+    
 def flatten_json(nested_json, prefix=''):
     """
     Flatten a nested JSON into a flat dictionary
