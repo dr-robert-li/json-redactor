@@ -11,6 +11,12 @@ build/
 # WPE Specific Version
 wpe-version/
 
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.bz2
+
 # Virtual environments
 venv/
 env/
