@@ -51,7 +51,7 @@ def redact_pii(obj):
 
         # Redact specific name patterns
         # Common greetings with names
-        text = re.sub(r'\b(Hey|Hello|Hi|Dear|Good morning|Good afternoon|Good evening|Evening|Morning|Afternoon|Greetings|Hiya|Howdy)[,!.\s-]*\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', r'\1 [REDACTED NAME]', text)        
+        text = re.sub(r'\b(Hey|Hey there|Hey There|Hello|Hi|Dear|Good morning|Good afternoon|Good evening|Evening|Morning|Afternoon|Greetings|Hiya|Howdy|Sup|sup|Whatsup|Whats up|Yo)[,!.\s-]*\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', r'\1 [REDACTED NAME]', text)        
         
         # Names with single initial (e.g., "John M" or "Joe L.")
         text = re.sub(r'\b([A-Z][a-z]+)\s+([A-Z]\.?)\b', '[REDACTED NAME]', text)
