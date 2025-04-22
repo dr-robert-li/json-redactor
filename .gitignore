@@ -8,6 +8,9 @@ dist/
 build/
 *.egg-info/
 
+# WPE Specific Version
+wpe-version/
+
 # Virtual environments
 venv/
 env/
