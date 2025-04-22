@@ -21,6 +21,10 @@ def redact_pii(obj):
         # Redact Zendesk links
         text = re.sub(r'https?://[^/]+\.zendesk\.com/\S+', '[REDACTED ZENDESK LINK]', text)
         
+        # Redact URLs containing tokens, hashes, auth strings
+        text = re.sub(r'https?://[^\s]+(?:[?&/])(token|access_token|auth|key|hash|code|cookie|session|jwt|bearer|oauth|api_key|secret)(?:=|/)[^&\s/]+', '[REDACTED AUTH URL]', text)
+        text = re.sub(r'https?://[^\s]+/[0-9a-f]{8,}(?:/|\?|$)', '[REDACTED HASH URL]', text)
+        text = re.sub(r'https?://[^\s]+/[A-Za-z0-9+/=_-]{32,}(?:/|\?|$)', '[REDACTED TOKEN URL]', text)        
         # Redact email addresses
         text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[REDACTED EMAIL]', text)
         
